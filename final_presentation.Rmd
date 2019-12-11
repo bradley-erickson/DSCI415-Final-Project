@@ -1,0 +1,73 @@
+---
+title: "DSCI 415: Unsupervised Learning Final Project"
+author: "Brad Erickson & Will Henschell"
+output: ioslides_presentation
+---
+
+# Anime Recommender System
+## Data
+Uhhhh
+
+
+# Pokemon Cluster Analysis
+```{r pokemon, include=FALSE}
+library(cluster)
+library(dplyr)
+library(factoextra)
+library(stringr)
+pokemon = read.csv(file="C:/Users/ic2009ml/Documents/GitHub/DSCI415-Final-Project/data/pokemon.csv", header=TRUE, sep=",", stringsAsFactors = FALSE)
+pokemon <- pokemon %>% mutate(type = paste(type1, type2) %>% str_split(., ' ') %>% lapply(., 'sort') %>%  lapply(., 'paste', collapse=' ') %>% unlist(.))
+pokemon <- pokemon %>% mutate(name.type = paste(type, name))
+pokemon <- pokemon[1:151,]
+rownames(pokemon) <- pokemon$name.type
+pokemon.mat <- pokemon[2:19]
+```
+
+## Overall data
+```{r pokemon.overall.data}
+colnames(pokemon)
+```
+
+## Data for clustering
+```{r pokemon.clustering.data}
+colnames(pokemon[2:19])
+pokemon.mat[1,]
+```
+
+## Finding k: wss
+```{r pokemon.finding.k.wss}
+fviz_nbclust(pokemon.mat,kmeans,k.max=25,method="wss")
+```
+
+## Finding k: silhouette
+```{r pokemon.finding.k.silhouette}
+fviz_nbclust(pokemon.mat,kmeans,k.max=25,method="silhouette")
+```
+
+## Finding k: gap_stat
+```{r pokemon.finding.k.gap_stat}
+fviz_nbclust(pokemon.mat,kmeans,k.max=25,method="gap_stat")
+```
+
+## Hierarchical clustering
+We choose k = 18 which is the total number of types
+```{r pokemon.hclust, echo=F}
+k = 18
+pokemon.dist <- dist(pokemon.mat)
+pokemon.hclust <- hclust(pokemon.dist, method="ward.D")
+fviz_dend(pokemon.hclust, k=k)
+```
+
+## Zoomed on clusters 1
+![](pokemon_dend_01.PNG)
+
+## Zoomed on clusters 2
+![](pokemon_dend_02.PNG)
+
+## Zoomed on clusters 3
+![](pokemon_dend_03.PNG)
+
+# Seinfeld Text Mining
+## Data
+Seinfeld
+
