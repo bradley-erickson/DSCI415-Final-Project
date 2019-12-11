@@ -128,5 +128,31 @@ for (i in main.characters) {
   max.word <- max(character.freq)
   character.freq[i] <- max.word*1.25
   character.freq <- sort(character.freq, decreasing=T)
-  wordcloud(words=names(character.freq[1:100]), freq=character.freq[1:100], col=rainbow(1000))
+  wordcloud(words=names(character.freq[1:100]), freq=character.freq[1:100], col=rainbow(1000), scale=c(3.5,0.25))
 }
+
+jerry.data <- show %>% filter(grepl("JERRY",Character))
+jerry.text.clean <- clean.text(jerry.data$Dialogue)
+jerry <- paste(jerry.text.clean, collapse = " ")
+
+george.data <- show %>% filter(grepl("GEORGE",Character))
+george.text.clean <- clean.text(george.data$Dialogue)
+george <- paste(george.text.clean, collapse = " ")
+
+elaine.data <- show %>% filter(grepl("ELAINE",Character))
+elaine.text.clean <- clean.text(elaine.data$Dialogue)
+elaine <- paste(elaine.text.clean, collapse = " ")
+
+kramer.data <- show %>% filter(grepl("KRAMER",Character))
+kramer.text.clean <- clean.text(kramer.data$Dialogue)
+kramer <- paste(kramer.text.clean, collapse = " ")
+
+group <- c(jerry, george, elaine, kramer)
+group <- removeWords(group, stopwords("english"))
+
+group.corpus <- Corpus(VectorSource(group))
+group.TDM <- TermDocumentMatrix(group.corpus)
+group.mat <- as.matrix(group.TDM)
+colnames(group.mat) <- c("JERRY", "GEORGE", "ELAINE", "KRAMER")
+
+comparison.cloud(group.mat, random.order=F, colors=c("blue", "red", "green", "purple"), scale=c(4,0.6), title.size=1, max.words=300)
