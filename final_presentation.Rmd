@@ -16,8 +16,8 @@ library(data.table)
 ### DATA
 Our dataset comes from [Kaggle](https://www.kaggle.com/CooperUnion/anime-recommendations-database). This data is formatted into 2 separate data files that were cleaned and combined. *rating.csv* included a user_id, anime_id, and a rating on a scale from -1 to 10, with -1 being watched and not rated and 10 being the best rating. *anime.csv* includes information about each anime movie or series. Data cleaning was done in Python.To make the file manageable, the movie ratings were dropped from the dataset, leaving only the reviews for TV series. The data for users with at less than 10 “good” ratings (a rating of 7 or more) were dropped from the data set, as well as TV series with less than 10 “good” reviews. This reduced the dataset to a more manageable size.  The data set was then transposed to have an anime title for each column header, and each user’s ratings as a row, which was then converted to a real ratings matrix. Due to the large amount of data used, we use a *.RData* file to pull in the necessary large variables.
 ```{r anime.data}
-#Load data (Change filepath to Anime.RData location)
-load(file="C:/Users/ic2009ml/Documents/GitHub/DSCI415-Final-Project/data/Anime.RData")
+# get the anime.RData file from the data folder
+load(file.choose())
 colnames(tv[1:10])
 ```
 
@@ -37,18 +37,18 @@ explore.algorithms <- list(
 #Evaluating all algorithms
 explore.results = evaluate(explore.scheme, explore.algorithms, n=c(1, 3, 5, 10, 15, 20))
 ```
-
 The code above was run to see which recommender algorithm best fit our data for giving out 1, 3, 5, 10, 15, and 20 recommendations.
 
 ### Plotting model results for comparison (TPR and FPR)
 ```{r anime.plotting.TPR.and.FPR.model}
 plot(explore.results, annotate = 1:4, legend = 'topleft')
 ```
-
+  
 ### Plotting model results for comparison (precision and recall)
 ```{r anime.plotting.precision.and.recall.model}
 plot(explore.results, 'prec/rec', annotate = 2:3)
 ```
+  
 ### Plot Notes
 Both plots indicate that the popular items algorithm is the best recommendation algorithm to give recommendations at all sizes of recommendation lists, unless the user only wants one recommendation. The best algorithm to use if the user just wants one recommendation is the user-based collaborative filtering algorithm.
 
@@ -122,7 +122,8 @@ library(stringr)
 ### Overall data
 Our data comes from [Kaggle](https://www.kaggle.com/rounakbanik/pokemon). Each row in the dataset is a different Pokemon. We decided to create a new column that includes *Type1, Type2, and Pokemon* for creating a detailed row name to appear in our structure. We cut the data down to only use the first 151 Pokemon for observing clusters more clearly later on.
 ```{r pokemon.overall.data}
-pokemon = read.csv(file="C:/Users/ic2009ml/Documents/GitHub/DSCI415-Final-Project/data/pokemon.csv", header=TRUE, sep=",", stringsAsFactors = FALSE)
+# get the pokemon.csv file from the data folder
+pokemon = read.csv(file.choose(), header=TRUE, sep=",", stringsAsFactors = FALSE)
 pokemon <- pokemon %>% mutate(type = paste(type1, type2) %>% str_split(., ' ') %>% lapply(., 'sort') %>%  lapply(., 'paste', collapse=' ') %>% unlist(.))
 pokemon <- pokemon %>% mutate(name.type = paste(type, name))
 pokemon <- pokemon[1:151,]
@@ -220,7 +221,8 @@ clean.text <- function(some_txt){
 ### Data
 The data is supplied by Dr. Deppa. We are only using the *scripts.csv* datafile from the dataset. This file includes the dialogue, who said it, and what season/episode they said it in.
 ```{r seinfeld.overall.data}
-show = read.csv(file="C:/Users/ic2009ml/Documents/GitHub/DSCI415-Final-Project/data/scripts.csv", header=TRUE, sep=",", stringsAsFactors = FALSE)
+# get the scripts.csv file from the data folder
+show = read.csv(file.choose(), header=TRUE, sep=",", stringsAsFactors = FALSE)
 show.title <- "Seinfeld"
 seasons <- unique(show$Season)
 colnames(show)
