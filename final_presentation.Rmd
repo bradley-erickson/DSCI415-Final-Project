@@ -5,22 +5,24 @@ output: html_document
 ---
 
 # Anime Recommender System
-```{r anime, include=FALSE}
+### Libraries needed
+```{r anime, message=F}
 library(recommenderlab)
 library(proxy)
 library(class)
 library(data.table)
 ```
 
-## DATA
+### DATA
+Our dataset comes from [Kaggle](https://www.kaggle.com/CooperUnion/anime-recommendations-database). This data is formatted into 2 separate data files that were cleaned and combined. *rating.csv* included a user_id, anime_id, and a rating on a scale from -1 to 10, with -1 being watched and not rated and 10 being the best rating. *anime.csv* includes information about each anime movie or series. Data cleaning was done in Python. Due to the large amount of data used, we use a *.RData* file to pull in the necessary large variables.
 ```{r anime.data}
 #Load data (Change filepath to Anime.RData location)
 load(file="C:/Users/ic2009ml/Documents/GitHub/DSCI415-Final-Project/data/Anime.RData")
 colnames(tv[1:10])
 ```
 
-## MODEL SELECTION EVALUATION
-```{r anime.selection.eval, eval=FALSE, results='asis'}
+### MODEL SELECTION EVALUATION
+```{r anime.selection.eval, eval=F}
 #Testing all recommenders
 explore.scheme = evaluationScheme(tv.mat, method= 'split', train = 0.85, k = 1, given = 1, goodRating = 7)
 
@@ -36,17 +38,17 @@ explore.algorithms <- list(
 explore.results = evaluate(explore.scheme, explore.algorithms, n=c(1, 3, 5, 10, 15, 20))
 ```
 
-## Plotting model results for comparison (TPR and FPR)
+### Plotting model results for comparison (TPR and FPR)
 ```{r anime.plotting.TPR.and.FPR.model}
 plot(explore.results, annotate = 1:4, legend = 'topleft')
 ```
 
-## Plotting model results for comparison (precision and recall)
+### Plotting model results for comparison (precision and recall)
 ```{r anime.plotting.precision.and.recall.model}
 plot(explore.results, 'prec/rec', annotate = 2:3)
 ```
 
-## FINAL RECOMMENDER MODEL
+### FINAL RECOMMENDER MODEL
 ```{r anime.recommender.model.creation, eval=FALSE}
 #Creating test and training data for final model
 tv.scheme = evaluationScheme(tv.mat, method= 'split', train = 0.666666, given = 1, goodRating = 7)
@@ -55,31 +57,31 @@ tv.scheme = evaluationScheme(tv.mat, method= 'split', train = 0.666666, given = 
 tv.pop.rec = Recommender(getData(tv.scheme, 'train'), method = 'POPULAR')
 ```
 
-## Creating top 10 list for all users
+### Creating top 10 list for all users
 ```{r anime.creating.top10, eval=FALSE}
 new.users.top10 = predict(tv.pop.rec, getData(tv.scheme, 'known'), n=10)
 as(new.users.top10, 'list')
 ```
 
-## Creating top 10 list for sample of 10
+### Creating top 10 list for sample of 10
 ```{r anime.creating.top10.sample, eval=FALSE}
 sample.new.users.top10 = predict(tv.pop.rec, getData(tv.scheme, 'known')[1:10,], n=10)
 sample.new.users.top10.list <- as(sample.new.users.top10, 'list')
 ```
 
-## Printing top 10 list for sample of 10
+### Printing top 10 list for sample of 10
 ```{r anime.printing.top10.sample.list}
 sample.new.users.top10.list
 ```
 
-## Creating and cleaning a string version of the list for the sample of 10
+### Creating and cleaning a string version of the list for the sample of 10
 ```{r anime.cleaning.top10.sample.list, eval=FALSE}
 sample.new.users.top10.string <- as.character(sample.new.users.top10.list)
 sample.new.users.top10.string <- gsub('c\\(', '', sample.new.users.top10.string)
 sample.new.users.top10.string <- gsub('\\)', '', sample.new.users.top10.string)
 ```
 
-## Preparing the counts of anime TV series that appear in the top 10 list for 10 users
+### Preparing the counts of anime TV series that appear in the top 10 list for 10 users
 ```{r anime.preparing.top10.anime.counts, eval=FALSE}
 sample.new.users.top10.list.split <- unlist(strsplit(sample.new.users.top10.string, split = ','))
 sample.new.users.top10.list.split.dt <- data.table(sample.new.users.top10.list.split)
@@ -87,7 +89,7 @@ colnames(sample.new.users.top10.list.split.dt)[colnames(sample.new.users.top10.l
 sample.new.users.top10.anime.counts <- sample.new.users.top10.list.split.dt[, .(count = .N), by = sample.new.users.top10.list.split.dt[,1]]
 ```
 
-## Printing top anime counts for sample of 10 users
+### Printing top anime counts for sample of 10 users
 ```{r anime.print.top10.anime.counts}
 print(sample.new.users.top10.anime.counts)
 ```
@@ -97,65 +99,77 @@ print(sample.new.users.top10.anime.counts)
 
 
 # Pokemon Cluster Analysis
-```{r pokemon, include=FALSE}
+### Libraries
+```{r pokemon, message=F}
 library(cluster)
 library(dplyr)
 library(factoextra)
 library(stringr)
+
+```
+
+### Overall data
+Our data comes from [Kaggle](https://www.kaggle.com/rounakbanik/pokemon). Each row in the dataset is a different Pokemon. We decided to create a new column that includes *Type1, Type2, and Pokemon* for creating a detailed row name to appear in our structure. We cut the data down to only use the first 151 Pokemon for observing clusters more clearly later on.
+```{r pokemon.overall.data}
 pokemon = read.csv(file="C:/Users/ic2009ml/Documents/GitHub/DSCI415-Final-Project/data/pokemon.csv", header=TRUE, sep=",", stringsAsFactors = FALSE)
 pokemon <- pokemon %>% mutate(type = paste(type1, type2) %>% str_split(., ' ') %>% lapply(., 'sort') %>%  lapply(., 'paste', collapse=' ') %>% unlist(.))
 pokemon <- pokemon %>% mutate(name.type = paste(type, name))
 pokemon <- pokemon[1:151,]
 rownames(pokemon) <- pokemon$name.type
 pokemon.mat <- pokemon[2:19]
-```
-
-## Overall data
-```{r pokemon.overall.data}
 colnames(pokemon)
 ```
 
-## Data for clustering
+### Data for clustering
+We truncate our data down to the effectiveness against each type for clustering purposes. An example of row in our data matrix is shown below.  
 ```{r pokemon.clustering.data}
 colnames(pokemon[2:19])
 pokemon.mat[1,]
 ```
 
-## Finding k: wss
+### Finding k
+To determine what our k should be for clustering, we use the three methods in the *fviz_nbclust* method from the *factoextra* package.   
+#### wss
+Our scree plot here indicates we should use around 15.  
 ```{r pokemon.finding.k.wss}
 fviz_nbclust(pokemon.mat,kmeans,k.max=25,method="wss")
 ```
 
-## Finding k: silhouette
+#### silhouette
+The silhouette method recommends we use 25 clusters.  
 ```{r pokemon.finding.k.silhouette}
 fviz_nbclust(pokemon.mat,kmeans,k.max=25,method="silhouette")
 ```
 
-## Finding k: gap_stat
+#### gap_stat
+Lastly, the gap_stat method indicates 1 cluster is sufficient.  
 ```{r pokemon.finding.k.gap_stat}
 fviz_nbclust(pokemon.mat,kmeans,k.max=25,method="gap_stat")
 ```
 
-## Hierarchical clustering
-We choose k = 18 which is the total number of types
-```{r pokemon.hclust, echo=F}
+### Hierarchical clustering
+We choose k = 18 which is the total number of types possible. Using ward's distance, we get a dendrogram with color cuts.  
+```{r pokemon.hclust}
 k = 18
 pokemon.dist <- dist(pokemon.mat)
 pokemon.hclust <- hclust(pokemon.dist, method="ward.D")
 fviz_dend(pokemon.hclust, k=k)
 ```
+After zooming in on the branches of this tree structure, we find clustering based on types.  
+![](pokemon_dend_01.PNG)  
+In the first chunk of clusters, we notice a common trend of flying Pokemon on the left and the grass/bug Pokemon on the right.  
 
-## Zoomed on clusters 1
-![](pokemon_dend_01.PNG)
+![](pokemon_dend_02.PNG)  
+Continuing on, we see the next piece of the cluster contains psychic Pokemon in one chunk and water Pokemon in another.  
 
-## Zoomed on clusters 2
-![](pokemon_dend_02.PNG)
+![](pokemon_dend_03.PNG)  
+Lastly, going from right to left, we see chunks of rock, normal, fire, poison, fighting, ground, fairy, electric, and steel. Ideally, we would like to create a table to see how well the cluster is doing, but Pokemon can depend on both of their typings. For example, Charizard's primary type is fire, but is clustered with the flying Pokemon.
 
-## Zoomed on clusters 3
-![](pokemon_dend_03.PNG)
 
 # Seinfeld Text Mining
-```{r seinfeld, include=FALSE}
+### Libraries and functions used
+The *cbind.all* function is for appending columns to a dataframe and the *clean.text* is from Dr. Deppa for cleaning the text.
+```{r seinfeld, message=F}
 library(syuzhet)
 library(dplyr)
 library(wordcloud)
@@ -189,38 +203,23 @@ clean.text <- function(some_txt){
   names(some_txt) = NULL
   return(some_txt)
 }
+
+```
+
+### Data
+The data is supplied by Dr. Deppa. We are only using the *scripts.csv* datafile from the dataset. This file includes the dialogue, who said it, and what season/episode they said it in.
+```{r seinfeld.overall.data}
 show = read.csv(file="C:/Users/ic2009ml/Documents/GitHub/DSCI415-Final-Project/data/scripts.csv", header=TRUE, sep=",", stringsAsFactors = FALSE)
 show.title <- "Seinfeld"
 seasons <- unique(show$Season)
-```
-
-## Data
-```{r seinfeld.overall.data}
 colnames(show)
 ```
 
-## Sentiment analysis per season
-```{r seinfeld.season.sentiment, eval=F}
-for (i in seasons) {
-  season.data <- show %>% filter(Season==i)
-  episodes <- unique(season.data$EpisodeNo)
-  season.sentiment <- data.frame()
-  title <- paste(show.title,": Season ",i," sentiment by episode")
-  plot(0,0, main=title, xlab = "Normalized Narrative Time", ylab = "Scaled Sentiment", type="n", xlim=c(-1,101), ylim=c(-1.01, 1.01))
-  for (j in episodes) {
-    episode.data <- season.data %>% filter(EpisodeNo==j)
-    episode.sentences <- get_sentences(episode.data$Dialogue)
-    episode.sentiment <- get_sentiment(episode.sentences)
-    episode.sentiment.values <- get_dct_transform(episode.sentiment, low_pass_size = 5, x_reverse_len = 100, scale_vals = F, scale_range = T)
-    season.sentiment <- cbind.all(season.sentiment, episode.sentiment.values)
-    lines(episode.sentiment.values)
-  }
-  season.sentiment.means <- rowMeans(season.sentiment)
-  lines(season.sentiment.means, col="firebrick", lwd = 5)
-}
-```
-
-```{r, results="asis", echo=F, warning=F}
+### Sentiment analysis
+We ran a sentiment analysis on the data. We will explore both by episode per season, overall average per season, and overall average.  
+#### By season
+With the per episode by season, we see the plots below. Each of the black lines indicate a different episode and the thicker red line is for the average episode sentiment for that season. 
+```{r, results="asis", warning=F}
 show.sentiment <- data.frame()
 episodes.sentiment <- data.frame()
 for (i in seasons) {
@@ -228,7 +227,7 @@ for (i in seasons) {
   episodes <- unique(season.data$EpisodeNo)
   season.sentiment <- data.frame()
   title <- paste(show.title,": Season ",i," sentiment by episode")
-  cat(paste("##", title))
+  cat(paste("#####", title))
   
   ### sentiment of episode plus season overall
   plot(0,0, main=title, xlab = "Normalized Narrative Time", ylab = "Scaled Sentiment", type="n", xlim=c(-1,101), ylim=c(-1.01, 1.01))
@@ -250,19 +249,11 @@ for (i in seasons) {
 }
 ```
 
-## Sentiment analysis overall
-```{r seinfeld.overall.sentiment, eval=F}
+#### Overall
+Next we looked at the overall sentiment. The thinner colored lines represent the season averages we saw in the previous plots. Once again, the thick red line is the average sentiment for an episode based on all episodes. From this line, we can simply say on average, Seinfeld episodes started with a relatively good tone and ended with a relatively poor tone. 
+```{r, results="asis", warning=F}
 title <- paste(show.title,": Sentiment by season")
-plot(0,0, main=title, xlab = "Normalized Narrative Time", ylab = "Scaled Sentiment", type="n", xlim=c(-1,101), ylim=c(-1.01, 1.01))
-for (i in seasons) {
-  lines(show.sentiment[,i], col=i)
-}
-lines(rowMeans(episodes.sentiment), col="firebrick", lwd = 5)
-```
-
-```{r, results="asis", echo=F, warning=F}
-title <- paste(show.title,": Sentiment by season")
-cat(paste("##", title))
+cat(paste("#####", title))
 plot(0,0, main=title, xlab = "Normalized Narrative Time", ylab = "Scaled Sentiment", type="n", xlim=c(-1,101), ylim=c(-1.01, 1.01))
 for (i in seasons) {
   lines(show.sentiment[,i], col=i)
@@ -271,23 +262,11 @@ lines(rowMeans(episodes.sentiment), col="firebrick", lwd = 5)
 cat("\n")
 ```
 
-## Wordcloud individual code
-```{r seinfeld.wordcloud.characters, eval=F}
-main.characters <- c("JERRY", "GEORGE", "ELAINE", "KRAMER")
-for (i in main.characters) {
-  character.data <- show %>% filter(grepl(i,Character))
-  character.text.clean <- clean.text(character.data$Dialogue)
-  character.corpus.stop <- Corpus(VectorSource(character.text.clean))
-  character.corpus <- tm_map(character.corpus.stop, removeWords, stopwords("en"))
-  character.TDM <- TermDocumentMatrix(character.corpus)
-  character.matrix <- as.matrix(character.TDM)
-  character.freq <- rowSums(character.matrix)
-  character.freq <- sort(character.freq, decreasing=T)
-  wordcloud(words=names(character.freq[1:100]), freq=character.freq[1:100], col=rainbow(1000))
-}
-```
-
-```{r, results="asis", echo=F, warning=F}
+### Wordclouds
+For the next piece of this analysis, we looked at both individual and a comparison word cloud.
+#### Individual
+To begin, we must filter the data down for each character. If multiple characters spoke the same thing at once, we counted it for both characters. For example: if Jerry and George both yelled "What?", then we include this dialogue in both Jerry and George's analysis. We removed the English stop words to have a better understanding of what each character said.  
+```{r, results="asis", warning=F}
 main.characters <- c("JERRY", "GEORGE", "ELAINE", "KRAMER")
 for (i in main.characters) {
   character.data <- show %>% filter(grepl(i,Character))
@@ -298,29 +277,16 @@ for (i in main.characters) {
   character.matrix <- as.matrix(character.TDM)
   character.freq <- rowSums(character.matrix)
   title <- paste(show.title,": ",i," top 20 most used words")
-  cat(paste("##",title))
+  cat(paste("#####",title))
   character.freq <- sort(character.freq, decreasing=T)
   wordcloud(words=names(character.freq[1:100]), freq=character.freq[1:100], col=rainbow(1000), scale=c(4,0.6))
   cat("\n")
 }
 ```
 
-
-## Wordcloud comparison code
-```{r seinfeld.wordcloud, eval=F}
-group <- c(jerry, george, elaine, kramer)
-group <- removeWords(group, stopwords("english"))
-
-group.corpus <- Corpus(VectorSource(group))
-group.TDM <- TermDocumentMatrix(group.corpus)
-group.mat <- as.matrix(group.TDM)
-colnames(group.mat) <- c("JERRY", "GEORGE", "ELAINE", "KRAMER")
-
-comparison.cloud(group.mat, random.order=F, colors=c("blue", "red", "green", "purple"), scale=c(4,0.6), title.size=1, max.words=300)
-```
-
-## Wordcloud Comparison
-```{r, echo=F, warning=F}
+#### Comparison
+We then took each filtering of the data and constructed a comparison word cloud.  
+```{r, warning=F}
 jerry.data <- show %>% filter(grepl("JERRY",Character))
 jerry.text.clean <- clean.text(jerry.data$Dialogue)
 jerry <- paste(jerry.text.clean, collapse = " ")
