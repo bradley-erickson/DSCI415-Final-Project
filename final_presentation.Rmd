@@ -14,7 +14,7 @@ library(data.table)
 ```
 
 ### DATA
-Our dataset comes from [Kaggle](https://www.kaggle.com/CooperUnion/anime-recommendations-database). This data is formatted into 2 separate data files that were cleaned and combined. *rating.csv* included a user_id, anime_id, and a rating on a scale from -1 to 10, with -1 being watched and not rated and 10 being the best rating. *anime.csv* includes information about each anime movie or series. Data cleaning was done in Python. Due to the large amount of data used, we use a *.RData* file to pull in the necessary large variables.
+Our dataset comes from [Kaggle](https://www.kaggle.com/CooperUnion/anime-recommendations-database). This data is formatted into 2 separate data files that were cleaned and combined. *rating.csv* included a user_id, anime_id, and a rating on a scale from -1 to 10, with -1 being watched and not rated and 10 being the best rating. *anime.csv* includes information about each anime movie or series. Data cleaning was done in Python.To make the file manageable, the movie ratings were dropped from the dataset, leaving only the reviews for TV series. The data for users with at less than 10 “good” ratings (a rating of 7 or more) were dropped from the data set, as well as TV series with less than 10 “good” reviews. This reduced the dataset to a more manageable size.  The data set was then transposed to have an anime title for each column header, and each user’s ratings as a row, which was then converted to a real ratings matrix. Due to the large amount of data used, we use a *.RData* file to pull in the necessary large variables.
 ```{r anime.data}
 #Load data (Change filepath to Anime.RData location)
 load(file="C:/Users/ic2009ml/Documents/GitHub/DSCI415-Final-Project/data/Anime.RData")
@@ -38,6 +38,8 @@ explore.algorithms <- list(
 explore.results = evaluate(explore.scheme, explore.algorithms, n=c(1, 3, 5, 10, 15, 20))
 ```
 
+The code above was run to see which recommender algorithm best fit our data for giving out 1, 3, 5, 10, 15, and 20 recommendations.
+
 ### Plotting model results for comparison (TPR and FPR)
 ```{r anime.plotting.TPR.and.FPR.model}
 plot(explore.results, annotate = 1:4, legend = 'topleft')
@@ -47,6 +49,8 @@ plot(explore.results, annotate = 1:4, legend = 'topleft')
 ```{r anime.plotting.precision.and.recall.model}
 plot(explore.results, 'prec/rec', annotate = 2:3)
 ```
+### Plot Notes
+Both plots indicate that the popular items algorithm is the best recommendation algorithm to give recommendations at all sizes of recommendation lists, unless the user only wants one recommendation. The best algorithm to use if the user just wants one recommendation is the user-based collaborative filtering algorithm.
 
 ### FINAL RECOMMENDER MODEL
 ```{r anime.recommender.model.creation, eval=FALSE}
@@ -63,6 +67,9 @@ new.users.top10 = predict(tv.pop.rec, getData(tv.scheme, 'known'), n=10)
 as(new.users.top10, 'list')
 ```
 
+### Model Notes
+The code above separates the data into a test set and training set of 2/3, 1/3 to be used with the recommendation algorithm.
+
 ### Creating top 10 list for sample of 10
 ```{r anime.creating.top10.sample, eval=FALSE}
 sample.new.users.top10 = predict(tv.pop.rec, getData(tv.scheme, 'known')[1:10,], n=10)
@@ -73,6 +80,9 @@ sample.new.users.top10.list <- as(sample.new.users.top10, 'list')
 ```{r anime.printing.top10.sample.list}
 sample.new.users.top10.list
 ```
+
+### Smaller Sample Model Notes
+This code creates a recommendation model from the training set using the popular items algorithm and creates predictions for all users. However, for the sake of practicality, a smaller sample of 10 users were predicted. This list shows that the same shows are generally suggested for all users, which makes sense because they are the most popular items. This says a lot about anime, because people are more likely to watch good series and discuss them, which makes them popular. Some of the top recommended shows for these 10 users are: Fullmetal Alchemist: Brotherhood, Death Note, and Steins Gate. 
 
 ### Creating and cleaning a string version of the list for the sample of 10
 ```{r anime.cleaning.top10.sample.list, eval=FALSE}
@@ -94,7 +104,8 @@ sample.new.users.top10.anime.counts <- sample.new.users.top10.list.split.dt[, .(
 print(sample.new.users.top10.anime.counts)
 ```
 
-
+### Recommendation Count Notes
+The counts of each recommendation were found, and it appears that users were recommended Angel Beats if they had already seen and rated one of the top 10 TV series, but were otherwise recommended the top 10 shows (with some altering of position). 
 
 
 
