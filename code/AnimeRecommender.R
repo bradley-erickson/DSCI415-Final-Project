@@ -6,6 +6,8 @@ library(class)
 library(data.table)
 
 ## DATA CLEANING
+#Load data (Change filepath to Anime.RData location)
+load('Anime.RData')
 
 #Loads in TV Ratings data
 tv.full = read.csv(file.choose())
@@ -47,30 +49,23 @@ tv.scheme = evaluationScheme(tv.mat, method= 'split', train = 0.666666, given = 
 #Fitting the popular items recommender on the training data
 tv.pop.rec = Recommender(getData(tv.scheme, 'train'), method = 'POPULAR')
 
-
-## PREDICTIONS
-#Creating the ratings predictions
-#tv.pop.model.ratings = predict(tv.pop.rec, getData(tv.scheme, 'known'), type='ratings')
-#tv.pop.model.ratings.mat = as(tv.pop.model.ratings, 'matrix')
-#tv.pop.model.ratings.mat[1,80]
-
 #Creating top 10 list for all users
 new.users.top10 = predict(tv.pop.rec, getData(tv.scheme, 'known'), n=10)
 as(new.users.top10, 'list')
 
-#Creating top 10 list for sample of 5
-sample.new.users.top10 = predict(tv.pop.rec, getData(tv.scheme, 'known')[1:5,], n=10)
+#Creating top 10 list for sample of 10
+sample.new.users.top10 = predict(tv.pop.rec, getData(tv.scheme, 'known')[1:10,], n=10)
 sample.new.users.top10.list <- as(sample.new.users.top10, 'list')
 sample.new.users.top10.list
 
-#Creating and cleaning a string version of the list for the sample of 5
+#Creating and cleaning a string version of the list for the sample of 10
 sample.new.users.top10.string <- as.character(sample.new.users.top10.list)
 sample.new.users.top10.string <- gsub('c\\(', '', sample.new.users.top10.string)
 sample.new.users.top10.string <- gsub('\\)', '', sample.new.users.top10.string)
 
-#Printing the counts of anime TV series that appear in the top 10 list for 5 users
+#Printing the counts of anime TV series that appear in the top 10 list for 10 users
 sample.new.users.top10.list.split <- unlist(strsplit(sample.new.users.top10.string, split = ','))
 sample.new.users.top10.list.split.dt <- data.table(sample.new.users.top10.list.split)
 colnames(sample.new.users.top10.list.split.dt)[colnames(sample.new.users.top10.list.split.dt)=="sample.new.users.top10.list.split"] <- "anime_title"
-sample.new.users.top10.list.split.dt[, .(count = .N), by = sample.new.users.top10.list.split.dt[,1]]
-
+sample.new.users.top10.anime.counts <- sample.new.users.top10.list.split.dt[, .(count = .N), by = sample.new.users.top10.list.split.dt[,1]]
+print(sample.new.users.top10.anime.counts)
